@@ -7,6 +7,9 @@ from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
+def upper(message: str):
+    return message.upper()
+
 def main() -> None:
     api_key = SecretStr(os.getenv("GROQ_API_KEY", ''))
     if not api_key:
@@ -35,13 +38,13 @@ def main() -> None:
     promptOne = prompt.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
     response = llm.invoke(promptOne)
    
-    result = parser.parse(str(response.content))
+    result = upper(parser.parse(str(response.content)))
     print(result)
 
     """
     Way via chaining
     """
-    chain = prompt | llm | parser
+    chain = prompt | llm | parser | upper
     response = chain.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
     print(response)
 

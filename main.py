@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from pydantic import SecretStr
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
@@ -10,22 +12,38 @@ def main() -> None:
     if not api_key:
         raise RuntimeError('Set GROQ_API_KEY first: $env:GROQ_API_KEY="your_api_key"')
 
-    client = ChatGroq(
+    llm = ChatGroq(
         model="openai/gpt-oss-20b",
         api_key=api_key,
         temperature=1,
         max_tokens=8192,
         model_kwargs={"top_p": 0.95, "seed": 42},
     )
+    parser = StrOutputParser() 
+    prompt = ChatPromptTemplate.from_messages([
+        {
+            'role': 'system',
+            'content': 'You are {lang} developer'
+        },
+        {
+            'role': 'user',
+            'content':  '{query}'
+        }
+    ])
 
-    promps = [
-        ('system', 'You are GoLang developer'),
-        ('user', 'Need to generate LRU basic flow')
-    ]
+    """Way one to add this"""
+    promptOne = prompt.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
+    response = llm.invoke(promptOne)
+   
+    result = parser.parse(str(response.content))
+    print(result)
 
-    response = client.invoke(promps)
-    print(response.content)
-
+    """
+    Way via chaining
+    """
+    chain = prompt | llm | parser
+    response = chain.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
+    print(response)
 
 if __name__ == "__main__":
     main()

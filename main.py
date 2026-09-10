@@ -64,5 +64,5 @@ def QnA() -> None:
 
 
 
-if __name__ == "__main__":
-    QnA()
+# if __name__ == "__main__":
+    # QnA()

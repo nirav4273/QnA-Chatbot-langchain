@@ -1,36 +1,47 @@
-# QnA Chatbot (LangChain + Groq)
+# QnA Chatbot (LangChain + Groq + Streamlit)
 
-A minimal example that runs a question-answering prompt against a Groq-hosted
-model using LangChain Core. It demonstrates two ways to compose the same call:
-invoking each piece manually, and wiring them together with LCEL (`|`) chaining.
+A minimal question-answering chatbot that talks to a Groq-hosted model through
+LangChain Core. `page.py` is a Streamlit chat UI; `main.py` holds the shared
+`llm` instance plus a couple of prompt-composition demos.
 
-## What `main.py` does
+## Files
+
+### `main.py` — shared LLM + demos
+
+At import time it:
 
 1. Loads environment variables from `.env` via `python-dotenv`.
-2. Builds a `ChatGroq` LLM (`openai/gpt-oss-20b`, `temperature=1`,
-   `max_tokens=8192`, `top_p=0.95`, `seed=42`).
-3. Defines a `ChatPromptTemplate` with a parameterized system message
-   (`You are {lang} developer`) and user message (`{query}`).
-4. Defines a `StrOutputParser` and a custom `upper()` transform that
-   uppercases the model output.
-5. Runs the prompt two ways:
-   - **Manual:** `prompt.invoke(...)` -> `llm.invoke(...)` -> `parser.parse(...)` -> `upper(...)`
-   - **Chained (LCEL):** `chain = prompt | llm | parser | upper`, then `chain.invoke(...)`
+2. Reads `GROQ_API_KEY` and raises a `RuntimeError` if it is not set.
+3. Builds a module-level `ChatGroq` LLM (`openai/gpt-oss-20b`, `temperature=1`,
+   `max_tokens=8192`, `top_p=0.95`, `seed=42`) exported as `llm`.
 
-Both calls use `lang="JavaScript"` and `query="Write basic LRU steps"`, and
-print the result.
+It also defines (neither is called by default — the `__main__` block is
+commented out):
+
+- `QnA()` — a terminal loop that reads from stdin (`Input:` prompt), exits on
+  `exit`, and prints `AI <content>` for anything else.
+- `main()` — builds a parameterized `ChatPromptTemplate`
+  (`You are {lang} developer` / `{query}`), a `StrOutputParser`, and a custom
+  `upper()` transform, then runs the same request two ways: manual
+  (`prompt.invoke` -> `llm.invoke` -> `parser.parse` -> `upper`) and LCEL
+  chained (`prompt | llm | parser | upper`).
+
+### `page.py` — Streamlit chat app
+
+Imports `llm` from `main.py` and renders a chat UI:
+
+- `st.chat_input()` for the question box,
+- chat history kept in `st.session_state.messages`,
+- each turn: append the user message, call `llm.invoke(query)`, append and
+  render the AI reply as markdown.
 
 ## Requirements
 
 - Python >= 3.13
 - A Groq API key
 
-Dependencies (see `pyproject.toml`):
-
-- `langchain-core`
-- `langchain-groq`
-- `pydantic`
-- `dotenv` / `python-dotenv`
+Dependencies (see `pyproject.toml`): `langchain-core`, `langchain-groq`,
+`pydantic`, `dotenv` / `python-dotenv`, `streamlit`.
 
 ## Setup
 
@@ -43,7 +54,7 @@ uv sync
 Or with pip:
 
 ```bash
-pip install langchain-core langchain-groq pydantic python-dotenv
+pip install langchain-core langchain-groq pydantic python-dotenv streamlit
 ```
 
 ## Configuration
@@ -60,16 +71,28 @@ PowerShell:
 $env:GROQ_API_KEY="your_api_key"
 ```
 
-The program raises a `RuntimeError` if `GROQ_API_KEY` is not set.
-
 ## Run
 
+### Streamlit app (main entry point)
+
 ```bash
-uv run main.py
+uv run streamlit run page.py
 ```
 
 Or:
 
 ```bash
-python main.py
+streamlit run page.py
 ```
+
+This opens the chat UI in your browser (default http://localhost:8501).
+
+### Terminal loop (optional)
+
+Uncomment the `__main__` block at the bottom of `main.py`, then:
+
+```bash
+uv run main.py
+```
+
+Type questions at the `Input:` prompt, and `exit` to quit.

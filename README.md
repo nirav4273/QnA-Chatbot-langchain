@@ -4,7 +4,9 @@ A minimal question-answering chatbot that talks to a Groq-hosted model through
 LangChain. `page.py` is a Streamlit chat UI and `stream_page.py` is the same UI
 with token-by-token streaming; `main.py` holds the shared `llm` / `llm_stream`
 instances plus prompt-composition demos; `structure_output.py` shows structured
-(Pydantic) output extraction; `custom_tool.py` is a tool-calling agent.
+(Pydantic) output extraction; `custom_tool.py` is a tool-calling agent; and
+`in_memory.py` is a web-search agent that answers with fresh data (Tavily) and
+keeps conversation memory across turns via a LangGraph checkpointer.
 
 ## Live demos
 
@@ -77,6 +79,27 @@ stdin (`Ask:` prompt), exits on `break`, appends each question as a
 `response["messages"]` forward as history, and prints the content of every
 message in the turn (tool calls, tool results, and the final answer).
 
+### `in_memory.py` — web-search agent with memory
+
+A terminal agent that can look up current information and remember the
+conversation:
+
+- Loads `.env`, then requires **both** `TAVILY_API_KEY` and `GROQ_API_KEY`,
+  raising a `RuntimeError` if either is missing.
+- `TavilySearch` tool (from `langchain-tavily`) configured with
+  `max_results=5`, `search_depth="basic"`, `time_range="day"`, and
+  `include_raw_content=False` — so answers are grounded in the last day's
+  results.
+- A dedicated `ChatGroq` LLM (`openai/gpt-oss-20b`, `temperature=1`,
+  `max_tokens=8192`, `top_p=0.95`, `seed=42`, `streaming=True`).
+- `create_agent` (from `langchain.agents`) wires the LLM and the Tavily tool
+  together with the system prompt `"You are assistant and give short ans"` and a
+  `MemorySaver` checkpointer from `langgraph.checkpoint.memory`.
+- A terminal loop reads from stdin, exits on `exit`, and invokes the agent with
+  a fixed `thread_id` of `"123"` so the checkpointer carries history forward
+  automatically (no manual `messages` list). It prints the last message's
+  content.
+
 ### `stream_demo.py` — streaming prompt scaffold
 
 Minimal scaffolding that imports `llm_stream` and defines a two-message
@@ -101,9 +124,11 @@ instead of free text:
 
 - Python >= 3.13
 - A Groq API key
+- A Tavily API key (only for `in_memory.py`)
 
 Dependencies (see `pyproject.toml`): `langchain`, `langchain-core`,
-`langchain-groq`, `pydantic`, `dotenv` / `python-dotenv`, `streamlit`.
+`langchain-groq`, `langchain-tavily`, `langgraph`, `pydantic`,
+`dotenv` / `python-dotenv`, `streamlit`.
 
 ## Setup
 
@@ -116,21 +141,25 @@ uv sync
 Or with pip:
 
 ```bash
-pip install langchain langchain-core langchain-groq pydantic python-dotenv streamlit
+pip install langchain langchain-core langchain-groq langchain-tavily langgraph pydantic python-dotenv streamlit
 ```
 
 ## Configuration
 
-Create a `.env` file (or set the variable in your shell) with your Groq API key:
+Create a `.env` file (or set the variables in your shell) with your API keys.
+`GROQ_API_KEY` is always required; `TAVILY_API_KEY` is required only for
+`in_memory.py`:
 
 ```
 GROQ_API_KEY=your_api_key
+TAVILY_API_KEY=your_api_key
 ```
 
 PowerShell:
 
 ```powershell
 $env:GROQ_API_KEY="your_api_key"
+$env:TAVILY_API_KEY="your_api_key"
 ```
 
 ## Run
@@ -177,6 +206,17 @@ uv run structure_output.py
 ```
 
 Prints a `model_dump()` dict of the extracted `ResponseStructure`.
+
+### Web-search agent with memory
+
+```bash
+uv run in_memory.py
+```
+
+Requires `TAVILY_API_KEY` in addition to `GROQ_API_KEY`. Ask a question at the
+prompt; the agent searches the web (Tavily, last-day results) when it needs
+current data and remembers earlier turns in the same session. Type `exit` to
+quit.
 
 ### Terminal loop (optional)
 

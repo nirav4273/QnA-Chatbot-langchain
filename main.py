@@ -34,6 +34,18 @@ def main() -> None:
         }
     ])
 
+
+    prompt_two = ChatPromptTemplate.from_messages([
+        {
+            'role': 'system',
+            'content': 'Convert into short summary'
+        },
+        {
+            'role': 'user',
+            'content':  'Give short summary {query}'
+        }
+    ])
+
     """Way one to add this"""
     promptOne = prompt.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
     response = llm.invoke(promptOne)
@@ -44,7 +56,7 @@ def main() -> None:
     """
     Way via chaining
     """
-    chain = prompt | llm | parser | upper
+    chain = prompt | llm | parser | upper 
     response = chain.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
     print(response)
 

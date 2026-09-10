@@ -2,6 +2,7 @@ import streamlit as st
 from main import llm
 
 st.title('AI QnA bot')
+st.markdown('AI QnA with keep memory of last questions.')
 
 query = st.chat_input()
 if 'messages' not in st.session_state:

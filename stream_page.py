@@ -1,7 +1,8 @@
 import streamlit as st
 from main import llm_stream
 
-st.title('AI QnA bot')
+st.title('AI QnA boat')
+st.markdown('AI QnA with ans in streaming format')
 
 query = st.chat_input()
 if 'messages' not in st.session_state:

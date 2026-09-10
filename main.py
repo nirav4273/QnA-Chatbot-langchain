@@ -19,6 +19,15 @@ llm = ChatGroq(
     model_kwargs={"top_p": 0.95, "seed": 42},
 )
 
+llm_stream = ChatGroq(
+    model="openai/gpt-oss-20b",
+    api_key=api_key,
+    temperature=1,
+    max_tokens=8192,
+    model_kwargs={"top_p": 0.95, "seed": 42},
+    streaming=True
+)
+
 def upper(message: str):
     return message.upper()
 

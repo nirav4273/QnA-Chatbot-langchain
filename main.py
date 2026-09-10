@@ -7,21 +7,23 @@ from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
+api_key = SecretStr(os.getenv("GROQ_API_KEY", ''))
+if not api_key:
+    raise RuntimeError('Set GROQ_API_KEY first: $env:GROQ_API_KEY="your_api_key"')
+
+llm = ChatGroq(
+    model="openai/gpt-oss-20b",
+    api_key=api_key,
+    temperature=1,
+    max_tokens=8192,
+    model_kwargs={"top_p": 0.95, "seed": 42},
+)
+
 def upper(message: str):
     return message.upper()
 
 def main() -> None:
-    api_key = SecretStr(os.getenv("GROQ_API_KEY", ''))
-    if not api_key:
-        raise RuntimeError('Set GROQ_API_KEY first: $env:GROQ_API_KEY="your_api_key"')
-
-    llm = ChatGroq(
-        model="openai/gpt-oss-20b",
-        api_key=api_key,
-        temperature=1,
-        max_tokens=8192,
-        model_kwargs={"top_p": 0.95, "seed": 42},
-    )
+    
     parser = StrOutputParser() 
     prompt = ChatPromptTemplate.from_messages([
         {
@@ -31,18 +33,6 @@ def main() -> None:
         {
             'role': 'user',
             'content':  '{query}'
-        }
-    ])
-
-
-    prompt_two = ChatPromptTemplate.from_messages([
-        {
-            'role': 'system',
-            'content': 'Convert into short summary'
-        },
-        {
-            'role': 'user',
-            'content':  'Give short summary {query}'
         }
     ])
 
@@ -60,5 +50,19 @@ def main() -> None:
     response = chain.invoke({'lang': 'JavaScript', 'query': 'Write basic LRU steps'})
     print(response)
 
+"""
+Continue QnA feed and exit on matched word
+"""
+def QnA() -> None:
+    while True:
+        question = input('Input:')
+        if(question.lower() == 'exit'):
+            print('EXIT:')
+            break
+        response = llm.invoke(question)
+        print('AI', response.content)
+
+
+
 if __name__ == "__main__":
-    main()
+    QnA()

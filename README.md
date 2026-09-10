@@ -12,6 +12,8 @@ instances plus prompt-composition demos; `structure_output.py` shows structured
   https://qna-chatbot-langchain-ax8tdzg9snuvvsgta3ekay.streamlit.app/
 - Streaming QnA with history (`stream_page.py`):
   https://qna-chatbot-langchain-c2kurekyzz97exycrjhxhw.streamlit.app/
+- Custom tool-calling agent demo (`custom_tool.py`):
+  https://qna-chatbot-langchain-ebvssrwfqgnmaunh6ryveq.streamlit.app/
 
 ## Files
 
@@ -166,6 +168,7 @@ uv run custom_tool.py
 Ask a math question at the `Ask:` prompt (e.g. `what is 12 * 7, then squared?`);
 the agent calls the `add_number` / `multiply_number` / `square` tools and prints
 each message in the turn. Type `break` to quit.
+Hosted: https://qna-chatbot-langchain-ebvssrwfqgnmaunh6ryveq.streamlit.app/
 
 ### Structured output example
 

@@ -2,7 +2,8 @@
 
 A minimal question-answering chatbot that talks to a Groq-hosted model through
 LangChain Core. `page.py` is a Streamlit chat UI; `main.py` holds the shared
-`llm` instance plus a couple of prompt-composition demos.
+`llm` instance plus prompt-composition demos; `structure_output.py` shows
+structured (Pydantic) output extraction.
 
 ## Files
 
@@ -32,8 +33,23 @@ Imports `llm` from `main.py` and renders a chat UI:
 
 - `st.chat_input()` for the question box,
 - chat history kept in `st.session_state.messages`,
-- each turn: append the user message, call `llm.invoke(query)`, append and
-  render the AI reply as markdown.
+- each turn: append the user message, call `llm.invoke(st.session_state.messages)`
+  (the full history is passed so the model has conversational memory), append
+  and render the AI reply as markdown.
+
+### `structure_output.py` — structured output example
+
+Shows `llm.with_structured_output(...)` returning a validated Pydantic object
+instead of free text:
+
+- `User` — a `BaseModel` with `name`, `age`, `email` fields (each with a
+  `Field(description=...)`).
+- `ResponseStructure` — wraps a `type: Literal["single", "array"]` discriminator
+  and `data: User | list[User]`.
+- `execute()` binds the schema with
+  `model = llm.with_structured_output(ResponseStructure)`, invokes it on a block
+  of text containing several people, and prints `result.model_dump()`. The
+  prompt asks the model to return just one user.
 
 ## Requirements
 
@@ -86,6 +102,14 @@ streamlit run page.py
 ```
 
 This opens the chat UI in your browser (default http://localhost:8501).
+
+### Structured output example
+
+```bash
+uv run structure_output.py
+```
+
+Prints a `model_dump()` dict of the extracted `ResponseStructure`.
 
 ### Terminal loop (optional)
 

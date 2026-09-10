@@ -6,6 +6,13 @@ with token-by-token streaming; `main.py` holds the shared `llm` / `llm_stream`
 instances plus prompt-composition demos; `structure_output.py` shows structured
 (Pydantic) output extraction; `custom_tool.py` is a tool-calling agent.
 
+## Live demos
+
+- QnA chat (`page.py`):
+  https://qna-chatbot-langchain-ax8tdzg9snuvvsgta3ekay.streamlit.app/
+- Streaming QnA with history (`stream_page.py`):
+  https://qna-chatbot-langchain-c2kurekyzz97exycrjhxhw.streamlit.app/
+
 ## Files
 
 ### `main.py` — shared LLM + demos
@@ -139,6 +146,7 @@ streamlit run page.py
 ```
 
 This opens the chat UI in your browser (default http://localhost:8501).
+Hosted: https://qna-chatbot-langchain-ax8tdzg9snuvvsgta3ekay.streamlit.app/
 
 ### Streamlit app with streaming
 
@@ -147,6 +155,7 @@ uv run streamlit run stream_page.py
 ```
 
 Same chat UI as `page.py`, but the AI reply streams in token by token.
+Hosted: https://qna-chatbot-langchain-c2kurekyzz97exycrjhxhw.streamlit.app/
 
 ### Tool-calling agent
 
